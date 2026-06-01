@@ -1,0 +1,31 @@
+name: Build Graphical DLL Injector
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repository Code
+      uses: actions/checkout@v4
+
+    - name: Configure Developer Command Prompt
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+
+    - name: Compile Executable with MSVC
+      run: |
+        cl.exe /EHsc /O2 /Fe:injector.exe main.cpp user32.lib kernel32.lib comdlg32.lib gdi32.lib /link /SUBSYSTEM:WINDOWS
+
+    - name: Upload Compiled Binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: Dark-GUI-Injector-Windows-x64
+        path: injector.exe
+        retention-days: 5
