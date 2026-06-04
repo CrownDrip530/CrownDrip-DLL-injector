@@ -14,11 +14,11 @@ char targetExePath[MAX_PATH] = "";
 char targetExeName[MAX_PATH] = "";
 char dllPath[MAX_PATH] = "";
 
-// 介面配色定義
-COLORREF COLOR_DARK_GREY  = RGB(30, 30, 30);    // 主視窗背景：深灰色
-COLORREF COLOR_LIGHT_GREY = RGB(50, 50, 50);    // 輸入框背景：中灰色
-COLORREF COLOR_BLACK      = RGB(0, 0, 0);       // 主控台背景：純黑色
-COLORREF COLOR_GREEN      = RGB(0, 255, 64);    // 文字顏色：螢光綠
+// Theme Colors
+COLORREF COLOR_DARK_GREY  = RGB(30, 30, 30);    // Window Background
+COLORREF COLOR_LIGHT_GREY = RGB(50, 50, 50);    // Path Input Fields
+COLORREF COLOR_BLACK      = RGB(0, 0, 0);       // Console Output Field
+COLORREF COLOR_GREEN      = RGB(0, 255, 64);    // Glowing Theme Font
 
 HBRUSH hBrushDarkGrey;
 HBRUSH hBrushLightGrey;
@@ -53,19 +53,19 @@ DWORD GetPidByProcessName(const char* procName) {
 bool ExecuteInjection(DWORD processId, const char* path) {
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId);
     if (!hProcess) {
-        LogToConsole("[-] 錯誤: OpenProcess 失敗。請嘗試以管理員身份執行。");
+        LogToConsole("[-] Error: OpenProcess failed. Run as Admin.");
         return false;
     }
 
     LPVOID pRemoteMemory = VirtualAllocEx(hProcess, NULL, strlen(path) + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (!pRemoteMemory) {
-        LogToConsole("[-] 錯誤: 無法在目標程序中分配記憶體。");
+        LogToConsole("[-] Error: Virtual memory allocation failed.");
         CloseHandle(hProcess);
         return false;
     }
 
     if (!WriteProcessMemory(hProcess, pRemoteMemory, path, strlen(path) + 1, NULL)) {
-        LogToConsole("[-] 錯誤: WriteProcessMemory 失敗。");
+        LogToConsole("[-] Error: WriteProcessMemory failed.");
         VirtualFreeEx(hProcess, pRemoteMemory, 0, MEM_RELEASE);
         CloseHandle(hProcess);
         return false;
@@ -74,7 +74,7 @@ bool ExecuteInjection(DWORD processId, const char* path) {
     LPVOID pLoadLibrary = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryA");
     HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pLoadLibrary, pRemoteMemory, 0, NULL);
     if (!hThread) {
-        LogToConsole("[-] 錯誤: 建立遠端執行緒失敗。");
+        LogToConsole("[-] Error: CreateRemoteThread failed.");
         VirtualFreeEx(hProcess, pRemoteMemory, 0, MEM_RELEASE);
         CloseHandle(hProcess);
         return false;
@@ -94,20 +94,20 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             hBrushLightGrey = CreateSolidBrush(COLOR_LIGHT_GREY);
             hBrushBlack     = CreateSolidBrush(COLOR_BLACK);
 
-            CreateWindowA("Static", "目標主程式:", WS_VISIBLE | WS_CHILD, 10, 15, 80, 20, hwnd, NULL, NULL, NULL);
+            CreateWindowA("Static", "Target Exe:", WS_VISIBLE | WS_CHILD, 10, 15, 80, 20, hwnd, NULL, NULL, NULL);
             hTargetInput = CreateWindowA("Edit", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_READONLY, 90, 12, 260, 22, hwnd, NULL, NULL, NULL);
-            CreateWindowA("Button", "瀏覽...", WS_VISIBLE | WS_CHILD, 360, 10, 90, 25, hwnd, (HMENU)ID_BTN_TARGET, NULL, NULL);
+            CreateWindowA("Button", "Browse...", WS_VISIBLE | WS_CHILD, 360, 10, 90, 25, hwnd, (HMENU)ID_BTN_TARGET, NULL, NULL);
 
-            CreateWindowA("Static", "注入 DLL:", WS_VISIBLE | WS_CHILD, 10, 50, 80, 20, hwnd, NULL, NULL, NULL);
+            CreateWindowA("Static", "Payload DLL:", WS_VISIBLE | WS_CHILD, 10, 50, 80, 20, hwnd, NULL, NULL, NULL);
             hDllInput = CreateWindowA("Edit", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_READONLY, 90, 47, 260, 22, hwnd, NULL, NULL, NULL);
-            CreateWindowA("Button", "瀏覽...", WS_VISIBLE | WS_CHILD, 360, 45, 90, 25, hwnd, (HMENU)ID_BTN_DLL, NULL, NULL);
+            CreateWindowA("Button", "Browse...", WS_VISIBLE | WS_CHILD, 360, 45, 90, 25, hwnd, (HMENU)ID_BTN_DLL, NULL, NULL);
 
-            CreateWindowA("Button", "執行 DLL 注入", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 85, 440, 35, hwnd, (HMENU)ID_BTN_INJECT, NULL, NULL);
+            CreateWindowA("Button", "EXECUTE INJECTION", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 85, 440, 35, hwnd, (HMENU)ID_BTN_INJECT, NULL, NULL);
 
-            CreateWindowA("Static", "主控台輸出紀錄 (Console Log):", WS_VISIBLE | WS_CHILD, 10, 135, 250, 15, hwnd, NULL, NULL, NULL);
+            CreateWindowA("Static", "Console Output Log:", WS_VISIBLE | WS_CHILD, 10, 135, 250, 15, hwnd, NULL, NULL, NULL);
             hConsoleLog = CreateWindowA("Edit", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL, 10, 155, 440, 180, hwnd, (HMENU)ID_TXT_CONSOLE, NULL, NULL);
             
-            LogToConsole("[*] 系統就緒。請選擇目標 EXE 與要注入的 DLL 檔案。");
+            LogToConsole("[*] CrownDrip Engine Operational. Awaiting target elements.");
             break;
         }
 
@@ -142,40 +142,40 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
             if (LOWORD(wp) == ID_BTN_TARGET) {
                 ofn.lpstrFile = targetExePath;
-                ofn.lpstrFilter = "執行檔 (*.exe)\0*.exe\0所有檔案\0*.*\0";
+                ofn.lpstrFilter = "Application (*.exe)\0*.exe\0All Files\0*.*\0";
                 if (GetOpenFileNameA(&ofn)) {
                     SetWindowTextA(hTargetInput, targetExePath);
                     std::string fullPath(targetExePath);
                     size_t lastSlash = fullPath.find_last_of("\\/");
                     std::string filename = (lastSlash == std::string::npos) ? fullPath : fullPath.substr(lastSlash + 1);
                     strcpy_s(targetExeName, filename.c_str());
-                    LogToConsole("[*] 已鎖定目標名稱: " + filename);
+                    LogToConsole("[*] Target locked: " + filename);
                 }
             }
             else if (LOWORD(wp) == ID_BTN_DLL) {
                 ofn.lpstrFile = dllPath;
-                ofn.lpstrFilter = "動態連結庫 (*.dll)\0*.dll\0";
+                ofn.lpstrFilter = "Dynamic Link Library (*.dll)\0*.dll\0";
                 if (GetOpenFileNameA(&ofn)) {
                     SetWindowTextA(hDllInput, dllPath);
-                    LogToConsole("[*] 已載入 DLL 檔案: " + std::string(dllPath));
+                    LogToConsole("[*] Payload path mapped: " + std::string(dllPath));
                 }
             }
             else if (LOWORD(wp) == ID_BTN_INJECT) {
                 if (strlen(targetExeName) == 0 || strlen(dllPath) == 0) {
-                    LogToConsole("[-] 錯誤: 請確認目標 EXE 與 DLL 皆已選擇。");
+                    LogToConsole("[-] Error: Targets missing.");
                     break;
                 }
 
-                LogToConsole("[*] 正在尋找運作中的進程: " + std::string(targetExeName));
+                LogToConsole("[*] Scanning system handles for: " + std::string(targetExeName));
                 DWORD pid = GetPidByProcessName(targetExeName);
 
                 if (pid == 0) {
-                    LogToConsole("[-] 失敗: 找不到該目標。請確認目標 EXE 目前「正在執行中」。");
+                    LogToConsole("[-] Error: Selected target is not active.");
                 } else {
-                    LogToConsole("[+] 成功尋找到目標！PID 進程編號: " + std::to_string(pid));
-                    LogToConsole("[*] 啟動遠端記憶體配置與注入程序...");
+                    LogToConsole("[+] Target verified. PID: " + std::to_string(pid));
+                    LogToConsole("[*] Launching memory runtime threads...");
                     if (ExecuteInjection(pid, dllPath)) {
-                        LogToConsole("[+] 【完美成功】DLL 已順利寫入該程序中！");
+                        LogToConsole("[+] [SUCCESS] Injection routing complete!");
                     }
                 }
             }
@@ -197,7 +197,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR args, int ncmdshow) {
     WNDCLASSEXA Wcx = {0};
-    const char* className = "InjectorUiClass";
+    const char* className = "CrownDripInjectorClass";
     
     hBrushDarkGrey = CreateSolidBrush(COLOR_DARK_GREY);
 
@@ -205,13 +205,15 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR args, int ncmdsho
     Wcx.lpfnWndProc = WindowProcedure;
     Wcx.hInstance = hInst;
     Wcx.lpszClassName = className;
-    hBrushDarkGrey = CreateSolidBrush(COLOR_DARK_GREY);
     Wcx.hbrBackground = hBrushDarkGrey;
     Wcx.hCursor = LoadCursor(NULL, IDC_ARROW);
 
+    // Matches the integer ID 1 specified inside resource.rc
+    Wcx.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(1));
+
     if (!RegisterClassExA(&Wcx)) return 0;
 
-    HWND hwnd = CreateWindowExA(0, className, "圖形化 DLL 注入器", 
+    HWND hwnd = CreateWindowExA(0, className, "CrownDrip DLL Injector", 
                                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE, 
                                 CW_USEDEFAULT, CW_USEDEFAULT, 475, 385, NULL, NULL, hInst, NULL);
 
