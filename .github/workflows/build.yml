@@ -1,4 +1,4 @@
-name: Build Graphical DLL Injector
+name: Build CrownDrip DLL Injector
 
 on:
   push:
@@ -19,13 +19,17 @@ jobs:
       with:
         arch: x64
 
-    - name: Compile Executable with MSVC
+    - name: Compile Resources and CrownDrip Suite
       run: |
-        cl.exe /EHsc /O2 /Fe:injector.exe main.cpp user32.lib kernel32.lib comdlg32.lib gdi32.lib /link /SUBSYSTEM:WINDOWS
+        rc.exe resource.rc
+        cl.exe /EHsc /O2 /Fe:"CrownDrip DLL Injector.exe" main.cpp resource.res user32.lib kernel32.lib comdlg32.lib gdi32.lib /link /SUBSYSTEM:WINDOWS
+        cl.exe /LD /EHsc /O2 /Fe:"CrownDripPayload.dll" payload.cpp user32.lib kernel32.lib
 
-    - name: Upload Compiled Binary
+    - name: Upload CrownDrip Test Suite
       uses: actions/upload-artifact@v4
       with:
-        name: Dark-GUI-Injector-Windows-x64
-        path: injector.exe
+        name: CrownDrip-Testing-Suite
+        path: |
+          CrownDrip DLL Injector.exe
+          CrownDripPayload.dll
         retention-days: 5
