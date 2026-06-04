@@ -23,7 +23,7 @@ jobs:
       run: |
         rc.exe resource.rc
         cl.exe /EHsc /O2 /Fe:"CrownDrip DLL Injector.exe" main.cpp resource.res user32.lib kernel32.lib comdlg32.lib gdi32.lib /link /SUBSYSTEM:WINDOWS
-        cl.exe /LD /EHsc /O2 /Fe:"CrownDripPayload.dll" payload.cpp user32.lib kernel32.lib
+        cl.exe /LD /EHsc /O2 /Fe:"CrownDripPayload.dll" payload.cpp user32.lib kernel32.lib gdi32.lib
 
     - name: Upload CrownDrip Test Suite
       uses: actions/upload-artifact@v4
